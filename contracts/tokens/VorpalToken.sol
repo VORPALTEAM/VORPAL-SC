@@ -1,8 +1,8 @@
-pragma solidity 0.8.13;
+pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol"; 
-import "./libV2/EnumerableSet.sol"; 
+import "./lib/EnumerableSet.sol"; 
 
 // Biswap token with Governance.
 contract Vorpal is ERC20('Vorpal', 'VRP'), Ownable {

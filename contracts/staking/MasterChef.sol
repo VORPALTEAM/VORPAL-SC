@@ -1,20 +1,14 @@
+//SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; 
-import "../VorpalToken.sol";
+import "../tokens/VorpalToken.sol";
 
 interface IMigratorChef {
     function migrate(IERC20 token) external returns (IERC20);
 }
 
-// MasterChef is the master of vorpal. He can make vorpal and he is a fair guy.
-//
-// Note that it's ownable and the owner wields tremendous power. The ownership
-// will be transferred to a governance smart contract once vorpal is sufficiently
-// distributed and the community can show to govern itself.
-//
-// Have fun reading it. Hopefully it's bug-free. God bless.
 contract MasterChef is Ownable {
     using SafeERC20 for IERC20;
     // Info of each user.

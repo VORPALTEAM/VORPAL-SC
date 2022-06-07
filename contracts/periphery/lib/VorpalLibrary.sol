@@ -1,7 +1,7 @@
 pragma solidity =0.6.6;
 
 import "../interfaces/IVorpalPair.sol";
-import "@openzeppelin/contracts@3.4.0/math/SafeMath.sol";
+import "./SafeMath.sol";
 
 library VorpalLibrary {
     using SafeMath for uint;

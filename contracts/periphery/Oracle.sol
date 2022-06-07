@@ -1,8 +1,8 @@
 pragma solidity =0.6.6;
 
-import "../lib/math/SafeMath.sol";
-import "../lib/math/FixedPoint.sol";
-import "../lib/OracleLibrary.sol";
+import "./lib/SafeMath.sol";
+import "./lib/FixedPoint.sol";
+import "./lib/OracleLibrary.sol";
 
 contract Oracle {
     using FixedPoint for *;
@@ -30,15 +30,15 @@ contract Oracle {
     }
 
     function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {
-        require(tokenA != tokenB, 'BSWSwapFactory: IDENTICAL_ADDRESSES');
+        require(tokenA != tokenB, "VorpalFactory: IDENTICAL_ADDRESSES");
         (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), 'BSWSwapFactory: ZERO_ADDRESS');
+        require(token0 != address(0), "VorpalFactory: ZERO_ADDRESS");
     }
 
     function pairFor(address tokenA, address tokenB) public view returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         pair = address(uint(keccak256(abi.encodePacked(
-                hex'ff',
+                hex"ff",
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
                 INIT_CODE_HASH
@@ -46,13 +46,13 @@ contract Oracle {
     }
 
     function update(address tokenA, address tokenB) external {
-        require(msg.sender == priceUpdater, 'BSWOracle: Price can update only price updater address');
+        require(msg.sender == priceUpdater, "VorpalOracle: Price can update only price updater address");
         address pair = pairFor(tokenA, tokenB);
 
         Observation storage observation = pairObservations[pair];
         uint timeElapsed = block.timestamp - observation.timestamp;
-        require(timeElapsed >= CYCLE, 'BSWOracle: PERIOD_NOT_ELAPSED');
-        (uint price0Cumulative, uint price1Cumulative,) = BSWOracleLibrary.currentCumulativePrices(pair);
+        require(timeElapsed >= CYCLE, "VorpalOracle: PERIOD_NOT_ELAPSED");
+        (uint price0Cumulative, uint price1Cumulative,) = VorpalOracleLibrary.currentCumulativePrices(pair);
         observation.timestamp = block.timestamp;
         observation.price0Cumulative = price0Cumulative;
         observation.price1Cumulative = price1Cumulative;
@@ -79,7 +79,7 @@ contract Oracle {
         }
 
         uint timeElapsed = block.timestamp - observation.timestamp;
-        (uint price0Cumulative, uint price1Cumulative,) = BSWOracleLibrary.currentCumulativePrices(pair);
+        (uint price0Cumulative, uint price1Cumulative,) = VorpalOracleLibrary.currentCumulativePrices(pair);
         (address token0,) = sortTokens(tokenIn, tokenOut);
 
         if (token0 == tokenIn) {

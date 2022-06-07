@@ -1,11 +1,11 @@
 pragma solidity =0.5.16;
 
-import "../lib/math/Math.sol";
-import "../lib/math/UQ112x112.sol";
+import "./lib/Math.sol";
+import "./lib/UQ112x112.sol";
 
-import "../interfaces/IVorpalFactory.sol";
-import "../interfaces/IVorpalPair.sol";
-import "../interfaces/IVorpalCallee.sol";
+import "./interfaces/IVorpalFactory.sol";
+import "./interfaces/IVorpalPair.sol";
+import "./interfaces/IVorpalCallee.sol";
 import "./VorpalERC20.sol";
 
 contract VorpalPair is IVorpalPair, VorpalERC20 {

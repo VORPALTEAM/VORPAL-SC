@@ -1,9 +1,10 @@
-pragma solidity 0.6.6;
+pragma solidity >=0.5.0;
 
-import "./math/FixedPoint.sol";
-import "../interfaces/IVorpalPair.sol"; 
+import "../interfaces/IVorpalPair.sol";
+import "./FixedPoint.sol";
 
-library BSWOracleLibrary {
+// library with helper methods for oracles that are concerned with computing average prices
+library VorpalOracleLibrary {
     using FixedPoint for *;
 
     // helper function that returns the current block timestamp within the range of uint32, i.e. [0, 2**32 - 1]

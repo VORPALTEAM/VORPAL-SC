@@ -1,12 +1,12 @@
 pragma solidity 0.6.6;
 
-import "../lib/access/Ownable.sol";
-import "../lib/math/SafeMath.sol";
-import "../lib/EnumerableSet.sol";
-import "../interfaces/IERC20.sol";
-import "../interfaces/IOracle.sol";
-import "../interfaces/IVorpalFactory.sol"; 
-import "../interfaces/IVorpalPair.sol";
+import "@openzeppelin/contracts@3.4.0/access/Ownable.sol"; 
+import "./lib/SafeMath.sol";
+import "./lib/EnumerableSet.sol";
+import "./interfaces/IERC20.sol";
+import "./interfaces/IOracle.sol";
+import "./interfaces/IVorpalFactory.sol"; 
+import "./interfaces/IVorpalPair.sol";
 
 interface IVorpalToken is IERC20 {
     function mint(address to, uint256 amount) external returns (bool);

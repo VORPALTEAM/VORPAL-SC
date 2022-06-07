@@ -1,16 +1,16 @@
 pragma solidity =0.6.6;
 
-import "../interfaces/IVorpalFactory.sol";
-import "../interfaces/IERC20.sol";
-import "../interfaces/IWETH.sol";
-import "../interfaces/IVorpalRouter02.sol";
+import "./interfaces/IVorpalFactory.sol";
+import "./interfaces/IERC20.sol";
+import "./interfaces/IWETH.sol";
+import "./interfaces/IVorpalRouter02.sol";
 
-import "../lib/access/Ownable.sol"; 
+import "@openzeppelin/contracts@3.4.0/access/Ownable.sol"; 
 
-import "../libv2/TransferHelper.sol";
-import "../libv2/VorpalLibrary.sol";
-import "../lib/math/Babylonian.sol";
-import "../lib/math/FullMath.sol";
+import "./lib/TransferHelper.sol";
+import "./lib/VorpalLibrary.sol";
+import "./lib/Babylonian.sol";
+import "./lib/FullMath.sol";
 
 interface ISwapFeeReward {
     function swap(address account, address input, address output, uint256 amount) external returns (bool);
