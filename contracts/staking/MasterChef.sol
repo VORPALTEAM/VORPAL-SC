@@ -1,12 +1,16 @@
 //SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.0;
+pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; 
-import "../tokens/VorpalToken.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IMigratorChef {
     function migrate(IERC20 token) external returns (IERC20);
+}
+
+interface ITreasury {
+    function transfer(address to, uint256 value) external returns (bool);
 }
 
 contract MasterChef is Ownable {
@@ -34,23 +38,28 @@ contract MasterChef is Ownable {
         uint256 lastRewardBlock; // Last block number that vorpals distribution occurs.
         uint256 accvorpalPerShare; // Accumulated vorpals per share, times 1e12. See below.
     }
-    Vorpal public vorpal;
+    IERC20 public vorpal;
+    //Farms treasury
+    ITreasury public farmTreasury;  
+    //DAO treasury 
+    address public daoTreasury;
+    //Safu treasury
+    address public safuTreasury;
+    //Dev treasury
+    address public devTreasury;
+
     //Pools, Farms, Dev, Refs percent decimals
-    uint256 public percentDec = 1000000;
+    uint256 public percentDec = 1_000_000;
     //Pools and Farms percent from token per block
-    uint256 public stakingPercent;
-    //Developers percent from token per block
-    uint256 public devPercent;
-    //Referrals percent from token per block
-    uint256 public refPercent;
+    uint256 public stakingPercent = 86_0000;
+
+    //Dao percent from token per block
+    uint256 public daoPercent = 10_0000;
     //Safu fund percent from token per block
-    uint256 public safuPercent;
-    // Dev address.
-    address public devaddr;
-    // Safu fund.
-    address public safuaddr;
-    // Refferals commision address.
-    address public refAddr;
+    uint256 public safuPercent = 1_0000;
+    //Developers percent from token per block
+    uint256 public devPercent = 3_0000;
+    
     // Last block then develeper withdraw dev and ref fee
     uint256 public lastBlockDevWithdraw;
     // vorpal tokens created per block.
@@ -68,7 +77,7 @@ contract MasterChef is Ownable {
     // The block number when vorpal mining starts.
     uint256 public startBlock;
     // Deposited amount vorpal in MasterChef
-    uint256 public depositedvorpal;
+    uint256 public depositedVorpal;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -79,29 +88,22 @@ contract MasterChef is Ownable {
     );
 
     constructor(
-        Vorpal _vorpal,
-        address _devaddr,
-        address _refAddr,
-        address _safuaddr,
-        uint256 _vorpalPerBlock,
-        uint256 _startBlock,
-        uint256 _stakingPercent,
-        uint256 _devPercent,
-        uint256 _refPercent,
-        uint256 _safuPercent
+        IERC20 _vorpal,
+        ITreasury _farmTreasury, 
+        address _daoTreasury, 
+        address _safuTreasury, 
+        address _devTreasury, 
+        uint256 _vorpalPerBlock
     ) {
         vorpal = _vorpal;
-        devaddr = _devaddr;
-        refAddr = _refAddr;
-        safuaddr = _safuaddr;
+        farmTreasury = _farmTreasury; 
+        daoTreasury = _daoTreasury; 
+        safuTreasury = _safuTreasury;
+        devTreasury = _devTreasury; 
         vorpalPerBlock = _vorpalPerBlock;
-        startBlock = _startBlock;
-        stakingPercent = _stakingPercent;
-        devPercent = _devPercent;
-        refPercent = _refPercent;
-        safuPercent = _safuPercent;
-        lastBlockDevWithdraw = _startBlock;
-        
+
+        startBlock = block.timestamp; 
+        lastBlockDevWithdraw = startBlock;
         
         // staking pool
         poolInfo.push(PoolInfo({
@@ -112,7 +114,6 @@ contract MasterChef is Ownable {
         }));
 
         totalAllocPoint = 1000;
-
     }
 
     function updateMultiplier(uint256 multiplierNumber) public onlyOwner {
@@ -126,10 +127,10 @@ contract MasterChef is Ownable {
     function withdrawDevAndRefFee() public{
         require(lastBlockDevWithdraw < block.number, 'wait for new block');
         uint256 multiplier = getMultiplier(lastBlockDevWithdraw, block.number);
-        uint256 vorpalReward = multiplier*vorpalPerBlock;
-        vorpal.mint(devaddr, vorpalReward*devPercent/percentDec);
-        vorpal.mint(safuaddr, vorpalReward*safuPercent/percentDec);
-        vorpal.mint(refAddr, vorpalReward*refPercent/percentDec);
+        uint256 vorpalReward = multiplier * vorpalPerBlock;
+        farmTreasury.transfer(daoTreasury, vorpalReward * daoPercent / percentDec);
+        farmTreasury.transfer(devTreasury, vorpalReward * devPercent / percentDec);
+        farmTreasury.transfer(safuTreasury, vorpalReward * safuPercent / percentDec);
         lastBlockDevWithdraw = block.number;
     }
 
@@ -189,7 +190,7 @@ contract MasterChef is Ownable {
         uint256 accvorpalPerShare = pool.accvorpalPerShare;
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
         if (_pid == 0){
-            lpSupply = depositedvorpal;
+            lpSupply = depositedVorpal;
         }
         if (block.number > pool.lastRewardBlock && lpSupply != 0) {
             uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
@@ -215,7 +216,7 @@ contract MasterChef is Ownable {
         }
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
         if (_pid == 0){
-            lpSupply = depositedvorpal;
+            lpSupply = depositedVorpal;
         }
         if (lpSupply <= 0) {
             pool.lastRewardBlock = block.number;
@@ -223,7 +224,7 @@ contract MasterChef is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 vorpalReward = multiplier*vorpalPerBlock*pool.allocPoint/totalAllocPoint*stakingPercent/percentDec;
-        vorpal.mint(address(this), vorpalReward);
+        farmTreasury.transfer(address(this), vorpalReward);
         pool.accvorpalPerShare = pool.accvorpalPerShare+(vorpalReward*(1e12)/(lpSupply));
         pool.lastRewardBlock = block.number;
     }
@@ -237,7 +238,7 @@ contract MasterChef is Ownable {
         updatePool(_pid);
         if (user.amount > 0) {
             uint256 pending = user.amount*pool.accvorpalPerShare/1e12-user.rewardDebt;
-            safevorpalTransfer(msg.sender, pending);
+            safeVorpalTransfer(msg.sender, pending);
         }
         pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
         user.amount = user.amount+_amount;
@@ -254,7 +255,7 @@ contract MasterChef is Ownable {
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
         uint256 pending = user.amount*pool.accvorpalPerShare/1e12-user.rewardDebt;
-        safevorpalTransfer(msg.sender, pending);
+        safeVorpalTransfer(msg.sender, pending);
         user.amount = user.amount-_amount;
         user.rewardDebt = user.amount*pool.accvorpalPerShare/1e12;
         pool.lpToken.safeTransfer(address(msg.sender), _amount);
@@ -269,13 +270,13 @@ contract MasterChef is Ownable {
         if (user.amount > 0) {
             uint256 pending = user.amount*(pool.accvorpalPerShare)/(1e12)-(user.rewardDebt);
             if(pending > 0) {
-                safevorpalTransfer(msg.sender, pending);
+                safeVorpalTransfer(msg.sender, pending);
             }
         }
         if(_amount > 0) {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount+(_amount);
-            depositedvorpal = depositedvorpal+(_amount);
+            depositedVorpal = depositedVorpal+(_amount);
         }
         user.rewardDebt = user.amount*(pool.accvorpalPerShare)/(1e12);
         emit Deposit(msg.sender, 0, _amount);
@@ -289,12 +290,12 @@ contract MasterChef is Ownable {
         updatePool(0);
         uint256 pending = user.amount*(pool.accvorpalPerShare)/(1e12)-(user.rewardDebt);
         if(pending > 0) {
-            safevorpalTransfer(msg.sender, pending);
+            safeVorpalTransfer(msg.sender, pending);
         }
         if(_amount > 0) {
             user.amount = user.amount-_amount;
             pool.lpToken.safeTransfer(address(msg.sender), _amount);
-            depositedvorpal = depositedvorpal-_amount;
+            depositedVorpal = depositedVorpal-_amount;
         }
         user.rewardDebt = user.amount*pool.accvorpalPerShare/1e12;
         emit Withdraw(msg.sender, 0, _amount);
@@ -311,7 +312,7 @@ contract MasterChef is Ownable {
     }
 
     // Safe vorpal transfer function, just in case if rounding error causes pool to not have enough vorpals.
-    function safevorpalTransfer(address _to, uint256 _amount) internal {
+    function safeVorpalTransfer(address _to, uint256 _amount) internal {
         uint256 vorpalBal = vorpal.balanceOf(address(this));
         if (_amount > vorpalBal) {
             vorpal.transfer(_to, vorpalBal);
@@ -320,16 +321,16 @@ contract MasterChef is Ownable {
         }
     }
 
-    function setDevAddress(address _devaddr) public onlyOwner {
-        devaddr = _devaddr;
+    function setDaoTreasury(address _daoTreasury) public onlyOwner {
+        daoTreasury = _daoTreasury;
     }
-    function setRefAddress(address _refaddr) public onlyOwner {
-        refAddr = _refaddr;
+    function setSafuTreausyr(address _safuTreasury) public onlyOwner {
+        safuTreasury = _safuTreasury;
     }
-    function setSafuAddress(address _safuaddr) public onlyOwner{
-        safuaddr = _safuaddr;
+    function setDevTreasury(address _devTreasury) public onlyOwner{
+        devTreasury = _devTreasury;
     }
-    function updatevorpalPerBlock(uint256 newAmount) public onlyOwner {
+    function updateVorpalPerBlock(uint256 newAmount) public onlyOwner {
         require(newAmount <= 30 * 1e18, 'Max per block 30 vorpal');
         require(newAmount >= 1 * 1e18, 'Min per block 1 vorpal');
         vorpalPerBlock = newAmount;

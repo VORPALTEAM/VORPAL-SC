@@ -41,23 +41,23 @@ contract VorpalFactory is IVorpalFactory {
     }
 
      function setFeeTo(address _feeTo) external {
-        require(msg.sender == feeToSetter, 'Biswap: FORBIDDEN');
+        require(msg.sender == feeToSetter, "Biswap: FORBIDDEN");
         feeTo = _feeTo;
     }
 
     function setFeeToSetter(address _feeToSetter) external {
-        require(msg.sender == feeToSetter, 'Biswap: FORBIDDEN');
+        require(msg.sender == feeToSetter, "Biswap: FORBIDDEN");
         feeToSetter = _feeToSetter;
     }
 
     function setDevFee(address _pair, uint8 _devFee) external {
-        require(msg.sender == feeToSetter, 'Biswap: FORBIDDEN');
-        require(_devFee > 0, 'Biswap: FORBIDDEN_FEE');
+        require(msg.sender == feeToSetter, "Biswap: FORBIDDEN");
+        require(_devFee > 0, "Biswap: FORBIDDEN_FEE");
         VorpalPair(_pair).setDevFee(_devFee);
     }
     
     function setSwapFee(address _pair, uint32 _swapFee) external {
-        require(msg.sender == feeToSetter, 'Biswap: FORBIDDEN');
+        require(msg.sender == feeToSetter, "Biswap: FORBIDDEN");
         VorpalPair(_pair).setSwapFee(_swapFee);
     }
 }

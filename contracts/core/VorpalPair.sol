@@ -26,8 +26,8 @@ contract VorpalPair is IVorpalPair, VorpalERC20 {
     uint public price0CumulativeLast;
     uint public price1CumulativeLast;
     uint public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
-    uint32 public swapFee = 1; // uses 0.1% default
-    uint32 public devFee = 1; // uses 0.5% default from swap fee
+    uint32 public swapFee = 1; // to lp providers
+    uint32 public devFee = 1; // 
 
     uint private unlocked = 1;
     modifier lock() {

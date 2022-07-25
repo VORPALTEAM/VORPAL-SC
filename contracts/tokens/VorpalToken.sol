@@ -2,18 +2,33 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol"; 
-import "./lib/EnumerableSet.sol"; 
 
-// Biswap token with Governance.
-contract Vorpal is ERC20('Vorpal', 'VRP'), Ownable {
-    using EnumerableSet for EnumerableSet.AddressSet;
-    EnumerableSet.AddressSet private _minters;
-
-    /// @notice Creates `_amount` token to `_to`.
-    function mint(address _to, uint256 _amount) public onlyMinter returns(bool) {
-        _mint(_to, _amount);
-        _moveDelegates(address(0), _delegates[_to], _amount);
-        return true;
+// Vorpal token with Governance.
+contract Vorpal is ERC20, Ownable {
+    constructor(
+        address saleTreasury,
+        address dexTreasury,
+        address cexTreasury,
+        address nftStakingTreasury,
+        address farmsTreasury,
+        address p2eTreasury,
+        address gameVaultTreasury, 
+        address referralsTreasury,
+        address advisorsTreasury, 
+        address marketingTreasury,
+        address bountyTreasury
+    ) ERC20("Vorpal", "VRP") {
+        _mint(saleTreasury, 420_000_000);
+        _mint(dexTreasury, 67_200_000);
+        _mint(cexTreasury, 67_200_000); 
+        _mint(nftStakingTreasury, 8_400_000_000);
+        _mint(farmsTreasury, 7_350_000_000); 
+        _mint(p2eTreasury, 1_050_000_000);
+        _mint(gameVaultTreasury, 2_100_000_000);
+        _mint(referralsTreasury, 420_000_000);
+        _mint(advisorsTreasury, 237_300_000);
+        _mint(marketingTreasury, 829_500_000);
+        _mint(bountyTreasury, 16_800_000);
     }
 
     /// @notice A record of each accounts delegate
@@ -238,35 +253,5 @@ contract Vorpal is ERC20('Vorpal', 'VRP'), Ownable {
         uint256 chainId;
         assembly { chainId := chainid() }
         return chainId;
-    }
-
-
-    function addMinter(address _addMinter) public onlyOwner returns (bool) {
-        require(_addMinter != address(0), "BSW: _addMinter is the zero address");
-        return EnumerableSet.add(_minters, _addMinter);
-    }
-
-    function delMinter(address _delMinter) public onlyOwner returns (bool) {
-        require(_delMinter != address(0), "BSW: _delMinter is the zero address");
-        return EnumerableSet.remove(_minters, _delMinter);
-    }
-
-    function getMinterLength() public view returns (uint256) {
-        return EnumerableSet.length(_minters);
-    }
-
-    function isMinter(address account) public view returns (bool) {
-        return EnumerableSet.contains(_minters, account);
-    }
-
-    function getMinter(uint256 _index) public view onlyOwner returns (address){
-        require(_index <= getMinterLength() - 1, "BSW: index out of bounds");
-        return EnumerableSet.at(_minters, _index);
-    }
-
-    // modifier for mint function
-    modifier onlyMinter() {
-        require(isMinter(msg.sender), "caller is not the minter");
-        _;
     }
 }
