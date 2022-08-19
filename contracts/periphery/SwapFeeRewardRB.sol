@@ -21,6 +21,10 @@ interface IVorpalNFT {
     function getInfoForStaking(uint256 tokenId) external view returns(address tokenOwner, bool stakeFreeze, uint256 robiBoost);
 }
 
+interface ITreasury {
+    function transfer(address to, uint256 value) external returns (bool);
+}
+
 abstract contract ReentrancyGuard {
     uint256 private constant _NOT_ENTERED = 1;
     uint256 private constant _ENTERED = 2;
@@ -67,7 +71,7 @@ contract SwapFeeRewardWithRB is Ownable, ReentrancyGuard {
     uint256 public rbWagerOnSwap = 1500; //Wager of RB
     uint256 public rbPercentMarket = 10000; // (div 10000)
     uint256 public rbPercentAuction = 10000; // (div 10000)
-    IVorpalToken public vorpalToken;
+    address public treasury;
     IOracle public oracle;
     IVorpalNFT public VorpalNFT;
     address public targetToken;
@@ -115,7 +119,7 @@ contract SwapFeeRewardWithRB is Ownable, ReentrancyGuard {
         address _factory,
         address _router,
         bytes32 _INIT_CODE_HASH,
-        IVorpalToken _vorpalToken,
+        address _treasury,
         IOracle _Oracle,
         IVorpalNFT _VorpalNFT,
         address _targetToken,
@@ -125,7 +129,7 @@ contract SwapFeeRewardWithRB is Ownable, ReentrancyGuard {
         factory = _factory;
         router = _router;
         INIT_CODE_HASH = _INIT_CODE_HASH;
-        vorpalToken = _vorpalToken;
+        treasury = _treasury;
         oracle = _Oracle;
         targetToken = _targetToken;
         VorpalNFT = _VorpalNFT;
@@ -275,7 +279,7 @@ contract SwapFeeRewardWithRB is Ownable, ReentrancyGuard {
             _balances[msg.sender] = _balances[msg.sender].sub(balance);
             totalMined = totalMined.add(balance);
             //SFR-04
-            if(vorpalToken.transfer(msg.sender, balance)){
+            if(treasury.transfer(msg.sender, balance)){
                 emit Withdraw(msg.sender, balance);
                 return true;
             }
