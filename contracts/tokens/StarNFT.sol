@@ -63,7 +63,7 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         uint planetSlots;
     }
 
-    Counters.Counter private _tokenIdCounter;
+    Counters.Counter public _tokenIdCounter;
     mapping(uint256 => StarParams) private _params;
 
     constructor(
@@ -74,12 +74,14 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
             plasmaToken = _plasma;
         }
 
+    /* Temporary data for tests */
+
     function CalcCreationCost (uint32 level) public view returns (uint) {
         uint tokenNum = _tokenIdCounter.current();
         if (tokenNum < 10) {
             tokenNum = 10;
         }
-        uint cost = 1000000000000000 * 2^(tokenNum / 10) * 4^(level - 1);
+        uint cost = 100000000000000000 * 2^(tokenNum / 10) * 4^(level - 1);
         return cost;
     }
 
@@ -164,6 +166,7 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         if ( _params[tokenId].levelUpFuel < cost) {
             revert("Not enough balance to increase level");
         }
+
         _params[tokenId].level = newLevel;
         _params[tokenId].fuel += _params[tokenId].levelUpFuel;
         _params[tokenId].levelUpFuel = 0;
@@ -174,6 +177,7 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
 
         uint256 hash = uint256(keccak256(abi.encode(blockhash(block.number))));
         uint randomPercent = hash % 100;
+
         uint newPlanetSlots = levelMinPlanets[newLevel] + ((levelMaxPlanets[newLevel] - levelMinPlanets[newLevel]) * (randomPercent / 100));
         _params[tokenId].planetSlots = newPlanetSlots;
     }
