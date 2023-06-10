@@ -129,8 +129,9 @@ contract PlasmaToken is ERC20Interface, SafeMath, Ownable {
         emit Transfer(address(0), msg.sender, _totalSupply);
     }
 
+    /* For tests only! It's will be ownable in mainnet */
     
-    function Mint (uint amount, address to) external onlyOwner {
+    function Mint (uint amount, address to) external {
         balances[to] += amount;
     }
 
