@@ -45,9 +45,13 @@ library TransferHelper {
 contract StarNFT721 is ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     address public plasmaToken;
-    uint[] public lifeTimeByLevel = [4380, 2190, 730]; 
-    uint[] public levelMinPlanets = [1, 10, 25];
-    uint[] public levelMaxPlanets = [5, 25, 50];
+    uint[] public lifeTimeByLevel = [0, 4380, 2190, 730]; 
+    uint[] public levelMaxFuel = [0, 25000000000000000, 200000000000000000, 2400000000000000000];
+    uint[] public levelMinPlanets = [0, 1, 10, 25];
+    uint[] public levelMaxPlanets = [0, 5, 25, 50];
+    uint[] public levelMinMass = [0, 10000, 50000, 100000];
+    uint[] public levelMaxMass = [0, 50000, 100000, 250000];
+    string[4] public races = ["Waters", "Humans", "Insects", "Lizards"];
 
     struct StarParams {
         string name;
@@ -61,6 +65,8 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         uint habitableZoneMin;
         uint habitableZoneMax;
         uint planetSlots;
+        uint mass;
+        string race;
         uint[3] coords;
     }
 
@@ -90,29 +96,37 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         return _tokenIdCounter.current();
     }
 
+    function IsRaceExists (string memory _race) public view returns (bool) {
+        bool isTrueRace = false;
+
+        for (uint256 i = 0; i < races.length; i++) {
+            if (keccak256(bytes(races[i])) == keccak256(bytes(_race))) {
+                 isTrueRace = true;
+            }
+        }
+        if (!isTrueRace) {
+            revert("Entered race not exists");
+        }
+
+        return isTrueRace;
+    }
+
     function safeMint(address to, 
                       string memory uri, 
                       string memory _name,
+                      string memory _race,
                       uint coordX,
                       uint coordY,
                       uint coordZ
                       ) public {
-
+        require(IsRaceExists(_race), "Race not exists!");
         uint cost = CalcCreationCost(1);
         uint lifeTime = lifeTimeByLevel[1]; // 6 months in hours
         TransferHelper.safeTransferFrom(plasmaToken, msg.sender, address(this), cost);
         uint256 hash = uint256(keccak256(abi.encode(blockhash(block.number))));
         uint randomPercent = hash % 100;
-        uint _planetSlots = randomPercent % 5;
-
-        if (_planetSlots < 1) {
-            _planetSlots = 1;
-        }
-
-        if (_planetSlots > 5) {
-            _planetSlots = 5;
-        }
-
+        uint _planetSlots = levelMinPlanets[1] + ((levelMaxPlanets[1] - levelMinPlanets[1]) * (randomPercent / 100));
+        uint mass = levelMinMass[1] + ((levelMaxMass[1] - levelMinMass[1]) * (randomPercent / 100));
         StarParams memory _newStar;
 
         _newStar = StarParams(
@@ -127,6 +141,8 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
             3,
             5,
             _planetSlots,
+            mass,
+            _race,
             [coordX, coordY, coordZ]
         );
 
@@ -158,7 +174,12 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
     function UpdateStarFuel (uint256 tokenId, uint fuel) external {
         require(_params[tokenId].isLive == true, "Star is already dead");
         TransferHelper.safeTransferFrom(plasmaToken, msg.sender, address(this), fuel);
-        _params[tokenId].fuel += fuel;
+        uint newFuel = _params[tokenId].fuel + fuel;
+        uint maxFuel = levelMaxFuel[_params[tokenId].level];
+        if ( newFuel > maxFuel) {
+            newFuel = maxFuel;
+        }
+        _params[tokenId].fuel = newFuel;
     }
 
     function UpdateStarLevelFuel (uint256 tokenId, uint fuel) external {
@@ -192,6 +213,9 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
 
         uint newPlanetSlots = levelMinPlanets[newLevel] + ((levelMaxPlanets[newLevel] - levelMinPlanets[newLevel]) * (randomPercent / 100));
         _params[tokenId].planetSlots = newPlanetSlots;
+
+        uint mass = levelMinMass[newLevel] + ((levelMaxMass[newLevel] - levelMinMass[newLevel]) * (randomPercent / 100));
+        _params[tokenId].mass = mass;
     }
 
 }
