@@ -61,6 +61,7 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         uint habitableZoneMin;
         uint habitableZoneMax;
         uint planetSlots;
+        uint[3] coords;
     }
 
     Counters.Counter public _tokenIdCounter;
@@ -85,7 +86,17 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         return cost;
     }
 
-    function safeMint(address to, string memory uri, string memory _name) public {
+    function GetTotalStarCount () public view returns (uint) {
+        return _tokenIdCounter.current();
+    }
+
+    function safeMint(address to, 
+                      string memory uri, 
+                      string memory _name,
+                      uint coordX,
+                      uint coordY,
+                      uint coordZ
+                      ) public {
 
         uint cost = CalcCreationCost(1);
         uint lifeTime = lifeTimeByLevel[1]; // 6 months in hours
@@ -115,7 +126,8 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
             cost / lifeTime, // per hour
             3,
             5,
-            _planetSlots
+            _planetSlots,
+            [coordX, coordY, coordZ]
         );
 
         uint256 tokenId = _tokenIdCounter.current();
