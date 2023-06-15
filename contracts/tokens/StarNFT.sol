@@ -53,6 +53,8 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
     uint[] public levelMaxMass = [0, 50000, 100000, 250000];
     string[4] public races = ["Waters", "Humans", "Insects", "Lizards"];
 
+    uint256 private hash = 0;
+
     struct StarParams {
         string name;
         bool isLive;
@@ -81,14 +83,33 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
             plasmaToken = _plasma;
         }
 
-    /* Temporary data for tests */
+    /* Random values function block */
+
+    function UpdateHash() internal {
+         hash = uint256(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
+    }
+
+    function GetRandomPlanetSlots (uint level) internal view returns (uint) {
+        uint _randomPercent = hash % 100;
+        uint _slots = ((levelMinPlanets[level] * 100) + ((levelMaxPlanets[level] - levelMinPlanets[level]) * _randomPercent)) / 100;
+        return _slots;
+    }
+
+    function GetRandomPlanetMass (uint level) internal view returns (uint) {
+        uint _randomPercent = hash % 100;
+        uint _slots = ((levelMinMass[level] * 100) + ((levelMaxMass[level] - levelMinMass[level]) * _randomPercent)) / 100;
+        return _slots;
+    }
+
+    /* Random values function block end */
+
 
     function CalcCreationCost (uint32 level) public view returns (uint) {
         uint tokenNum = _tokenIdCounter.current();
-        if (tokenNum < 10) {
-            tokenNum = 10;
-        }
-        uint cost = 100000000000000000 * 2^(tokenNum / 10) * 4^(level - 1);
+
+        uint starGroup = 100;
+        uint groupCount = tokenNum / starGroup;
+        uint cost = 100000000000000000 * 2**groupCount * 4**(level - 1);
         return cost;
     }
 
@@ -123,10 +144,10 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         uint cost = CalcCreationCost(1);
         uint lifeTime = lifeTimeByLevel[1]; // 6 months in hours
         TransferHelper.safeTransferFrom(plasmaToken, msg.sender, address(this), cost);
-        uint256 hash = uint256(keccak256(abi.encode(blockhash(block.number))));
-        uint randomPercent = hash % 100;
-        uint _planetSlots = levelMinPlanets[1] + ((levelMaxPlanets[1] - levelMinPlanets[1]) * (randomPercent / 100));
-        uint mass = levelMinMass[1] + ((levelMaxMass[1] - levelMinMass[1]) * (randomPercent / 100));
+
+        UpdateHash();
+        uint _planetSlots = GetRandomPlanetSlots(1);
+        uint mass = GetRandomPlanetMass(1);
         StarParams memory _newStar;
 
         _newStar = StarParams(
@@ -185,7 +206,8 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
     function UpdateStarLevelFuel (uint256 tokenId, uint fuel) external {
         require(_params[tokenId].isLive == true, "Star is already dead");
         TransferHelper.safeTransferFrom(plasmaToken, msg.sender, address(this), fuel);
-        _params[tokenId].levelUpFuel += fuel;
+        uint newFuel = _params[tokenId].levelUpFuel + fuel;
+        _params[tokenId].levelUpFuel = newFuel;
     }
 
     function IncreaseStarLevel ( uint256 tokenId ) external {
@@ -208,13 +230,12 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         _params[tokenId].habitableZoneMin +=2;
         _params[tokenId].habitableZoneMax +=3;
 
-        uint256 hash = uint256(keccak256(abi.encode(blockhash(block.number))));
-        uint randomPercent = hash % 100;
+        UpdateHash();
 
-        uint newPlanetSlots = levelMinPlanets[newLevel] + ((levelMaxPlanets[newLevel] - levelMinPlanets[newLevel]) * (randomPercent / 100));
+        uint newPlanetSlots = GetRandomPlanetSlots(newLevel);
         _params[tokenId].planetSlots = newPlanetSlots;
 
-        uint mass = levelMinMass[newLevel] + ((levelMaxMass[newLevel] - levelMinMass[newLevel]) * (randomPercent / 100));
+        uint mass = GetRandomPlanetMass(newLevel);
         _params[tokenId].mass = mass;
     }
 
