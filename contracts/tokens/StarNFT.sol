@@ -47,8 +47,8 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
     address public plasmaToken;
     uint[] public lifeTimeByLevel = [0, 4380, 2190, 730]; 
     uint[] public levelMaxFuel = [0, 25000000000000000, 200000000000000000, 2400000000000000000];
-    uint[] public levelMinPlanets = [0, 1, 10, 25];
-    uint[] public levelMaxPlanets = [0, 5, 25, 50];
+    uint[] public levelMinPlanets = [0, 1, 5, 10];
+    uint[] public levelMaxPlanets = [0, 5, 10, 25];
     uint[] public levelMinMass = [0, 10000, 50000, 100000];
     uint[] public levelMaxMass = [0, 50000, 100000, 250000];
     string[4] public races = ["Waters", "Humans", "Insects", "Lizards"];
