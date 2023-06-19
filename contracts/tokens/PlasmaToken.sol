@@ -96,9 +96,6 @@ contract SafeMath {
 }
 
 contract PlasmaToken is ERC20Interface, SafeMath, Ownable {
-    address internal rtr = 0xCc7aDc94F3D80127849D2b41b6439b7CF1eB4Ae0;
-    address internal minoris = 0x8f5Ce611724D9Cc289b6D89cBcA329AcD14c3485;
-    address[] internal checkedPath = [address(this), 0x0dE8FCAE8421fc79B29adE9ffF97854a424Cad09]; // 0x72D2C41ba7EdbdD435F4f655C6De0141622124e5
 
     string public name;
     string public symbol;

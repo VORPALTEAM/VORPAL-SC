@@ -180,7 +180,7 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
 
     function UpdateStarLifecycle (uint256 tokenId) external {
          uint time = block.timestamp;
-         uint lifehours = (time - _params[tokenId].updated) / 3600;
+         uint lifehours = (time - _params[tokenId].updated) / 60;
          uint totalSpendings = _params[tokenId].fuelSpendings * lifehours;
          _params[tokenId].updated = time;
 
