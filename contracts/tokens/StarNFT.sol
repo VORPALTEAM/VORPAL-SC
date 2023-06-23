@@ -45,6 +45,7 @@ library TransferHelper {
 contract StarNFT721 is ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     address public plasmaToken;
+    address public gameAdmin;
     uint[] public lifeTimeByLevel = [0, 4380, 2190, 730]; 
     uint[] public levelMaxFuel = [0, 25000000000000000, 200000000000000000, 2400000000000000000];
     uint[] public levelMinPlanets = [0, 1, 5, 10];
@@ -72,16 +73,41 @@ contract StarNFT721 is ERC721URIStorage, Ownable {
         uint[3] coords;
     }
 
+    struct GameStats {
+        uint games;
+        uint win;
+    }
+
     Counters.Counter public _tokenIdCounter;
     mapping(uint256 => StarParams) private _params;
+    mapping(uint256 => GameStats) private _stats;
 
     constructor(
-       address _plasma
+       address _plasma,
+       address _gameAdmin
       ) ERC721(
         "VorpalMetaverseStar", "STAR"
         ) {
             plasmaToken = _plasma;
+            gameAdmin = _gameAdmin;
         }
+    
+    /* Game statistics */
+    
+    function UpdateGameAdmin (address _newAdmin) external onlyOwner {
+        gameAdmin = _newAdmin;
+    }
+
+    function RegisterGameResult (uint256 _winner, uint256 _opponent) external {
+        require(msg.sender == gameAdmin, "User have no rights to register");
+        _stats[_winner].games += 1;
+        _stats[_opponent].games += 1;
+        _stats[_winner].win += 1;
+    }
+
+    function StarStats (uint256 _starId) external view returns (GameStats memory) {
+        return _stats[_starId];
+    }
 
     /* Random values function block */
 
