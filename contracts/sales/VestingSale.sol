@@ -2,7 +2,7 @@
  *Submitted for verification at BscScan.com on 2022-12-22
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.15;
 
 /**
  * @dev Provides information about the current execution context, including the
@@ -684,6 +684,8 @@ contract VestingSale is Ownable {
     //Schedules for each address who bought the tokens
     mapping(address => VestingSchedule[]) schedules;
     mapping(uint256 => address) idToAddress;
+    mapping(address => uint256) txnCount;
+
     IERC20 public vorpal;
     IERC20 public usdc;
     uint256 public minInvestmentAmount;
@@ -760,12 +762,12 @@ contract VestingSale is Ownable {
 
     ///@notice Swaps USDC into Vorpal and locks it
     ///@param amount - amount of USDC to buy Vorpal tokens
-     function buyTokens(uint256 amount, uint256 id) external onlyStarted {
+     function buyTokens(uint256 amount) external onlyStarted {
         if (amount < minInvestmentAmount) {
             revert InsufficientBalance();
         }
-
-        require(idToAddress[id] == address(0), "ID already used");
+        uint256 id = txnCount[msg.sender];
+        // require(idToAddress[id] == address(0), "ID already used");
 
         usdc.safeTransferFrom(address(msg.sender), address(this), amount);
 
@@ -780,7 +782,7 @@ contract VestingSale is Ownable {
             id
         ));
         idToAddress[id] = msg.sender;
-
+        txnCount[msg.sender] += 1;
         totalTokensLeft -= vorpalAmount;
     }
 
@@ -849,9 +851,13 @@ function withdrawTokens(uint256 amount, uint256 id) external {
 
     ///@notice Read-only wrapper for internal getUnlockedTokens
    function getUnlockedTokens(address holder, uint256 id) external view returns (uint256) {
-    VestingSchedule memory schedule = schedules[holder][id];
-    return getUnlockedTokens(schedule);
-}
+      VestingSchedule memory schedule = schedules[holder][id];
+      return getUnlockedTokens(schedule);
+   }
+
+   function getUserTxnCount(address holder) external view returns (uint256) {
+     return txnCount[holder];
+   }
 
     ///@notice Calculates amount of tokens user can withdraw
    function getUnlockedTokens(VestingSchedule memory schedule)
