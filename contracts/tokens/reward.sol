@@ -179,4 +179,12 @@ contract RewardSender is SafeMath, Ownable {
       TransferHelper.safeTransfer(rewardToken, msg.sender, balances[msg.sender]);
       balances[msg.sender] = 0;
    }
+
+   function balanceOf (address _user) external view returns (uint) {
+      return balances[_user];
+   }
+
+   function getUserWinsCount (address _user) external view returns (uint) {
+      return rewardCount[_user];
+   }
 }
