@@ -60,30 +60,30 @@ contract ERC721 is IERC721 {
     mapping(uint => address) internal _approvals;
 
     // Mapping from owner to operator approvals
-    mapping(address => mapping(address => bool)) public isApprovedForAll;
+    mapping(address => mapping(address => bool)) public override isApprovedForAll;
 
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId) external override pure returns (bool) {
         return
             interfaceId == type(IERC721).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
     }
 
-    function ownerOf(uint id) external view returns (address owner) {
+    function ownerOf(uint id) external override view returns (address owner) {
         owner = _ownerOf[id];
         require(owner != address(0), "token doesn't exist");
     }
 
-    function balanceOf(address owner) external view returns (uint) {
+    function balanceOf(address owner) external override view returns (uint) {
         require(owner != address(0), "owner = zero address");
         return _balanceOf[owner];
     }
 
-    function setApprovalForAll(address operator, bool approved) external {
+    function setApprovalForAll(address operator, bool approved) external override  {
         isApprovedForAll[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
-    function approve(address spender, uint id) external {
+    function approve(address spender, uint id) external override  {
         address owner = _ownerOf[id];
         require(
             msg.sender == owner || isApprovedForAll[owner][msg.sender],
@@ -95,7 +95,7 @@ contract ERC721 is IERC721 {
         emit Approval(owner, spender, id);
     }
 
-    function getApproved(uint id) external view returns (address) {
+    function getApproved(uint id) external override view returns (address) {
         require(_ownerOf[id] != address(0), "token doesn't exist");
         return _approvals[id];
     }
@@ -110,7 +110,7 @@ contract ERC721 is IERC721 {
             spender == _approvals[id]);
     }
 
-    function transferFrom(address from, address to, uint id) public {
+    function transferFrom(address from, address to, uint id) public override  {
         require(from == _ownerOf[id], "from != owner");
         require(to != address(0), "transfer to zero address");
 
@@ -125,7 +125,7 @@ contract ERC721 is IERC721 {
         emit Transfer(from, to, id);
     }
 
-    function safeTransferFrom(address from, address to, uint id) external {
+    function safeTransferFrom(address from, address to, uint id) external override {
         transferFrom(from, to, id);
 
         require(
@@ -141,7 +141,7 @@ contract ERC721 is IERC721 {
         address to,
         uint id,
         bytes calldata data
-    ) external {
+    ) external override {
         transferFrom(from, to, id);
 
         require(

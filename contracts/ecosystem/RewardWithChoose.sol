@@ -1,15 +1,13 @@
 pragma solidity ^0.8.0;
 
 import "./common.sol";
-import "./RandomProvider.sol";
 
-abstract contract ILaserNFT { 
+abstract contract IBoxNFT { 
    function safeMint(address to, string memory uri ) public virtual;
-   function GetTotalTokenCount () public virtual view returns (uint);
-   function GetTokenLevel (uint _id) external virtual view returns ( uint32 );
+   function getTotalCount () public virtual view returns (uint);
 }
 
-contract RewardSenderWithChoose is SafeMath, Ownable, RandomProvider {
+contract RewardSenderWithChoose is SafeMath, Ownable {
    
    address public rewardToken;
    address public gameAdmin;
@@ -19,12 +17,7 @@ contract RewardSenderWithChoose is SafeMath, Ownable, RandomProvider {
    uint256 private activeAmount = 0;
    uint256 public gameCount = 0;
 
-   IERC20 public Spore;
-   IERC20 public Spice;
-   IERC20 public Metal;
-   IERC20 public Biomass;
-   IERC20 public Carbon;
-   ILaserNFT public LaserNFT;
+   IBoxNFT public BoxNFT;
 
    struct RewardData {
       address winner;
@@ -42,22 +35,12 @@ contract RewardSenderWithChoose is SafeMath, Ownable, RandomProvider {
       address _admin,
       address _token,
       uint256 _rewardSizePart,
-      address _spore,
-      address _spice,
-      address _metal,
-      address _biomass,
-      address _carbon,
-      address _laserNFT
+      address _boxNFT
    ) {
       rewardToken = _token;
       gameAdmin = _admin;
       rewardSizePart = _rewardSizePart;
-      Spore = IERC20(_spore);
-      Spice = IERC20(_spice);
-      Metal = IERC20(_metal);
-      Biomass = IERC20(_biomass);
-      Carbon = IERC20(_carbon);
-      LaserNFT = ILaserNFT(_laserNFT);
+      BoxNFT = IBoxNFT(_boxNFT);
    }
 
    modifier onlyAdmin() {
@@ -95,75 +78,14 @@ contract RewardSenderWithChoose is SafeMath, Ownable, RandomProvider {
            0
         );
       } else {
-        UpdateRandom();
-        uint256 rv = this.GetRandomValue(2);
-
-           if (rv <= 10) {
-              uint nftCount = LaserNFT.GetTotalTokenCount ();
-              LaserNFT.safeMint(_winner, "VorpalLaserToken");
+         uint nftCount = BoxNFT.getTotalCount ();
+         BoxNFT.safeMint(_winner, "Box");
               _winParams = RewardData(
                 _winner,
-                address(LaserNFT),
+                address(BoxNFT),
                 0,
                 nftCount
-              );
-           }
-           if (rv > 10 && rv <= 25) {
-             uint256 rewardSize = (activeAmount * rewardSizePart) / percentEq;
-             balances[_winner] += rewardSize;
-             activeAmount -= rewardSize;
-             _winParams = RewardData(
-                _winner,
-                rewardToken,
-                rewardSize,
-                0
-             );
-           }
-           if (rv > 25 && rv <= 40) {
-             Spore.Mint(resourceRewardAmount, _winner);
-             _winParams = RewardData(
-                _winner,
-                address(Spore),
-                resourceRewardAmount,
-                0
-             );
-           }
-           if (rv > 40 && rv <= 55) {
-             Spice.Mint(resourceRewardAmount, _winner);
-             _winParams = RewardData(
-                _winner,
-                address(Spice),
-                resourceRewardAmount,
-                0
-             );
-           }
-           if (rv > 55 && rv <= 70) {
-             Metal.Mint(resourceRewardAmount, _winner);
-             _winParams = RewardData(
-                _winner,
-                address(Metal),
-                resourceRewardAmount,
-                0
-             );
-           }
-           if (rv > 70 && rv <= 85) {
-             Biomass.Mint(resourceRewardAmount, _winner);
-             _winParams = RewardData(
-                _winner,
-                address(Biomass),
-                resourceRewardAmount,
-                0
-             );
-           }
-           if (rv > 85 && rv < 100) {
-             Carbon.Mint(resourceRewardAmount, _winner);
-             _winParams = RewardData(
-                _winner,
-                address(Carbon),
-                resourceRewardAmount,
-                0
-             );
-           }
+            );
         rewards[gameCount] = _winParams;
       }
    }
