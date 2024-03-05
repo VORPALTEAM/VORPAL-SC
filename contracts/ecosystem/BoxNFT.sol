@@ -31,8 +31,6 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
     IERC20 public VRPReward;
     ILaserNFT public LaserNFT;
 
-    uint tokenRewardSize = 1000000000000000000000;
-
     constructor(
       address _spore,
       address _spice,
@@ -63,9 +61,6 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
       return minters[_minter];
     }
 
-    function UpdateTokenRewardSize (uint _newSize)external onlyOwner {
-         tokenRewardSize = _newSize;
-    }
 
     function safeMint(address to, 
                       string memory uri
@@ -81,9 +76,10 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
         require(!usedNumbers[_random], "Value is already used");
         // UpdateRandom();
         usedNumbers[_random] = true; 
-        uint rv = _random % 100;
+        uint rv = _random % 10000;
+        uint tokenRewardSize = (_random % 1000) * 10 ** 18;
         boxInfo memory currentBoxInfo;
-            if (rv <= 10) {
+            if (rv <= 300) {
               boxInfo memory currentBoxInfo;
               currentBoxInfo = boxInfo(
                 address(LaserNFT),
@@ -92,10 +88,12 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
                 true
               );
               boxData[_boxId] = currentBoxInfo;
-              uint32 laserlevel = uint32(rv % 3);
+              uint32 laserlevel = 0;
+              if (rv < 31) laserlevel = 1;
+              if (rv < 11) laserlevel = 2;
               LaserNFT.safeMint(msg.sender, "VorpalLaserToken", laserlevel);
            }
-           if (rv > 10 && rv <= 25) {
+           if (rv > 1000 && rv <= 2500) {
              currentBoxInfo = boxInfo(
                 address(VRPReward),
                 0,
@@ -105,7 +103,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
              boxData[_boxId] = currentBoxInfo;
              VRPReward.Mint(tokenRewardSize, msg.sender);
            }
-           if (rv > 25 && rv <= 40) {
+           if (rv > 2500 && rv <= 4000) {
              currentBoxInfo = boxInfo(
                 address(Spore),
                 0,
@@ -115,7 +113,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
              boxData[_boxId] = currentBoxInfo;
              Spore.Mint(tokenRewardSize, msg.sender);
            }
-           if (rv > 40 && rv <= 55) {
+           if (rv > 4000 && rv <= 5500) {
              currentBoxInfo = boxInfo(
                 address(Spice),
                 0,
@@ -125,7 +123,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
              boxData[_boxId] = currentBoxInfo;
              Spice.Mint(tokenRewardSize, msg.sender);
            }
-           if (rv > 55 && rv <= 70) {
+           if (rv > 5500 && rv <= 7000) {
              currentBoxInfo = boxInfo(
                 address(Metal),
                 0,
@@ -135,7 +133,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
              boxData[_boxId] = currentBoxInfo;
              Metal.Mint(tokenRewardSize, msg.sender);
            }
-           if (rv > 70 && rv <= 85) {
+           if (rv > 7000 && rv <= 8500) {
              currentBoxInfo = boxInfo(
                 address(Biomass),
                 0,
@@ -145,7 +143,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
              boxData[_boxId] = currentBoxInfo;
              Biomass.Mint(tokenRewardSize, msg.sender);
            }
-           if (rv > 85 && rv < 100) {
+           if (rv > 8500 && rv < 10000) {
              currentBoxInfo = boxInfo(
                 address(Carbon),
                 0,
