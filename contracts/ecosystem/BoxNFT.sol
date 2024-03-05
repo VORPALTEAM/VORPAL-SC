@@ -1,11 +1,11 @@
 pragma solidity ^0.8.0;
 
-import "./nfts/ERC721Counter.sol";
+import "./ERC721Counter.sol";
 import "./RandomProvider.sol";
 import "./common.sol";
 
 abstract contract ILaserNFT { 
-   function safeMint(address to, string memory uri ) public virtual;
+   function safeMint(address to, string memory uri, uint32 _level ) public virtual;
    function getTotalCount () public virtual view returns (uint);
    function GetTokenLevel (uint _id) external virtual view returns ( uint32 );
 }
@@ -20,6 +20,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
     }
 
     mapping(address => bool) minters;
+    mapping(uint => bool) usedNumbers;
     mapping(uint => boxInfo) boxData;
 
     IERC20 public Spore;
@@ -58,6 +59,10 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
         minters[_minter] = false;
     }
 
+    function IsMinter (address _minter) external view returns (bool) {
+      return minters[_minter];
+    }
+
     function UpdateTokenRewardSize (uint _newSize)external onlyOwner {
          tokenRewardSize = _newSize;
     }
@@ -69,29 +74,35 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
         _numberMint (to);
     }
 
-    function openBox(uint _boxId) external {
+    function openBox(uint _boxId, uint _random) external {
         require(_boxId < _counter, "Box is still not minted");
         require(this.ownerOf(_boxId) == msg.sender, "Caller is not a box owner");
         require(!boxData[_boxId].isPaid, "Box is already opened");
-        UpdateRandom();
-        uint rv = this.GetRandomValue(2);
+        require(!usedNumbers[_random], "Value is already used");
+        // UpdateRandom();
+        usedNumbers[_random] = true; 
+        uint rv = _random % 100;
         boxInfo memory currentBoxInfo;
             if (rv <= 10) {
+              boxInfo memory currentBoxInfo;
               currentBoxInfo = boxInfo(
                 address(LaserNFT),
                 LaserNFT.getTotalCount(),
                 0,
                 true
               );
-              LaserNFT.safeMint(msg.sender, "VorpalLaserToken");
+              boxData[_boxId] = currentBoxInfo;
+              uint32 laserlevel = uint32(rv % 3);
+              LaserNFT.safeMint(msg.sender, "VorpalLaserToken", laserlevel);
            }
-           if (rv > 10 && rv <= 100) {
+           if (rv > 10 && rv <= 25) {
              currentBoxInfo = boxInfo(
                 address(VRPReward),
                 0,
                 tokenRewardSize,
                 true
              );
+             boxData[_boxId] = currentBoxInfo;
              VRPReward.Mint(tokenRewardSize, msg.sender);
            }
            if (rv > 25 && rv <= 40) {
@@ -101,6 +112,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
                 tokenRewardSize,
                 true
              );
+             boxData[_boxId] = currentBoxInfo;
              Spore.Mint(tokenRewardSize, msg.sender);
            }
            if (rv > 40 && rv <= 55) {
@@ -110,6 +122,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
                 tokenRewardSize,
                 true
              );
+             boxData[_boxId] = currentBoxInfo;
              Spice.Mint(tokenRewardSize, msg.sender);
            }
            if (rv > 55 && rv <= 70) {
@@ -119,6 +132,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
                 tokenRewardSize,
                 true
              );
+             boxData[_boxId] = currentBoxInfo;
              Metal.Mint(tokenRewardSize, msg.sender);
            }
            if (rv > 70 && rv <= 85) {
@@ -128,6 +142,7 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
                 tokenRewardSize,
                 true
              );
+             boxData[_boxId] = currentBoxInfo;
              Biomass.Mint(tokenRewardSize, msg.sender);
            }
            if (rv > 85 && rv < 100) {
@@ -137,9 +152,9 @@ contract BoxNFT is ERC721Counter, Ownable, RandomProviderPublic {
                 tokenRewardSize,
                 true
              );
+             boxData[_boxId] = currentBoxInfo;
              Carbon.Mint(tokenRewardSize, msg.sender);
            }
-           boxData[_boxId] = currentBoxInfo;
     }
 
     function getBoxInfo (uint _boxId) external view returns (boxInfo memory) {
